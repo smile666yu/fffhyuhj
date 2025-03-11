@@ -20,32 +20,46 @@ function button_utility_script(inputArr, bindingClass, actionBindMode) {
     ModAPI.hooks.methods[ModAPI.util.getMethodFromPackage(bindingClass, "initGui")] = function (...args) {
         originalInit.apply(this, args);
         var gui = ModAPI.util.wrap(args[0]).getCorrective();
-        out.forEach(guiButton => {
-            gui.buttonList.add(guiButton);
-        });
+        if (gui.buttonList) {
+            out.forEach(guiButton => {
+                gui.buttonList.add(guiButton);
+            });
+        }
     }
 }
 
 (() => {
-    ModAPI.meta.title("Full Bright Toggle");
-    ModAPI.meta.description("Adds a button to enable or disable Full Bright mode.");
+    ModAPI.meta.title("Mob ESP");
+    ModAPI.meta.description("Adds a toggle for Mob ESP.");
     ModAPI.meta.credits("Modified by Lemon");
 
-    let fullBright = false;
+    let espEnabled = false;
     
-    var fullBrightButton = [{
-        text: "Toggle Full Bright",
+    var buttons = [{
+        text: "Toggle Mob ESP",
         click: () => {
-            fullBright = !fullBright;
-            ModAPI.mc.gameSettings.gammaSetting = fullBright ? 1000 : 1;
-            alert(fullBright ? "Full Bright Enabled" : "Full Bright Disabled");
+            espEnabled = !espEnabled;
+            alert(espEnabled ? "Mob ESP Enabled" : "Mob ESP Disabled");
         },
-        x: 2, // Top-left corner
-        y: 2,
-        w: 100,
+        x: 250, // Right top side
+        y: 5,
+        w: 120,
         h: 20,
-        uid: 152715250
+        uid: 152715251
     }];
 
-    button_utility_script(fullBrightButton, "net.minecraft.client.gui.GuiOptions", 0);
+    [
+        "net.minecraft.client.gui.GuiOptions",
+        "net.minecraft.client.gui.GuiIngameMenu"
+    ].forEach(ui => {
+        button_utility_script(buttons, ui, 0);
+    });
+
+    ModAPI.hooks.injectEvent("net.minecraft.client.renderer.entity.RenderManager", "renderEntity", (event) => {
+        if (!espEnabled) return;
+        var entity = event.args[0];
+        if (entity && entity.getClass().getSimpleName().includes("EntityLiving")) {
+            ModAPI.render.renderEntityBoundingBox(entity, 0, 255, 0, 255); // Green ESP
+        }
+    });
 })();
